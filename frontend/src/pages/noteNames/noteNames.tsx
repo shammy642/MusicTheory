@@ -1,6 +1,9 @@
 import React, { useState } from "react"
-import { SelectKeyboardKey } from "../../components/selectKeyboardKey/selectKeyboardKey"
+
 import { useNavigate } from "react-router-dom";
+import { SelectKeyboardKey } from "@/components/selectKeyboardKey/selectKeyboardKey";
+
+
 
 type answers = 'c1' | 'cs1' | 'd1' | 'ds1' | 'e1' | 'f1' | 'fs1' | 'g1' | 'gs1' | 'a1' | 'as1' | 'b1' | 'c2' | 'cs2' | 'd2' | 'ds2' | 'e2' | 'f2' | 'fs2' | 'g2' | 'gs2' | 'a2' | 'as2' | 'b2';
 

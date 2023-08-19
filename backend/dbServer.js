@@ -150,7 +150,7 @@ app.post("/completeSection", authenticateAccessToken, async (req, res) => {
    })
 })
 
-app.get("/getCompletedSections", authenticateAccessToken, async (req, res) => {
+app.get("/completeSections", authenticateAccessToken, async (req, res) => {
    const userId = req.user.userId;
 
    const sqlGetSections = "SELECT sectionId FROM userSectionsCompleted WHERE userId = ?";
