@@ -2,7 +2,7 @@ import { Box, Container, Paper, styled } from "@mui/material"
 import React from "react"
 import Grid from '@mui/material/Unstable_Grid2';
 import { Link } from "react-router-dom";
-import { Login } from "../login/login";
+import { Login } from "@/pages/login/login";
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',

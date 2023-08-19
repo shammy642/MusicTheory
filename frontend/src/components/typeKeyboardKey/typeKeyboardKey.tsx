@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react"
-import { Keyboard } from "../keyboard/keyboard"
+import React, { useState } from "react"
+import { Keyboard } from "@/components/keyboard/keyboard";
 import { Box, Button, TextField, Typography } from "@mui/material"
 
 
