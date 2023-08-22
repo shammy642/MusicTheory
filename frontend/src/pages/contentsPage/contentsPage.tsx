@@ -10,26 +10,23 @@ const Item = styled(Paper)(({ theme }) => ({
     padding: theme.spacing(1),
     textAlign: 'center',
     color: theme.palette.text.secondary,
-  }));
+}));
 
 export const ContentsPage = () => {
     return (
         <React.Fragment>
             <Container>
-                <Login />
-            </Container>
-            <Container>
-            <Box sx={{ flexGrow: 1 }}>
-                <Grid container spacing={6}>
-                    <Grid xs>
-                        <Item><Link to={"/note-names"}>Note Names</Link></Item>
+                <Box sx={{ flexGrow: 1 }}>
+                    <Grid container spacing={6}>
+                        <Grid xs>
+                            <Item><Link to={"/note-names"}>Note Names</Link></Item>
+                        </Grid>
+                        <Grid xs>
+                            <Item><Link to={"/note-names-2"}>Note Names 2</Link></Item>
+                        </Grid>
                     </Grid>
-                    <Grid xs>
-                        <Item><Link to={"/note-names-2"}>Note Names 2</Link></Item>
-                    </Grid>
-                </Grid>
-            </Box>
+                </Box>
             </Container>
         </React.Fragment>
-        )
+    )
 }
