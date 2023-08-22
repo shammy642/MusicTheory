@@ -6,6 +6,7 @@ import { MainLayoutWithContext } from "./layouts/mainLayoutWithContext"
 
 
 
+
 export const RouteConfig = () => {
     return (
         <Routes>
@@ -13,6 +14,7 @@ export const RouteConfig = () => {
                 <Route path="/contents-page" element={<ContentsPage />} />
                 <Route path="/note-names" element={<NoteNames />} />
                 <Route path="/note-names-2" element={<NoteNames2 />} />
+                {/* <Route path="/congratulations" element={<Congratulations />} /> */}
             </Route>
         </Routes>
     )

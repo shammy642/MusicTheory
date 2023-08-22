@@ -1,6 +1,7 @@
 import { useAuth } from "@/auth/authContext";
-import { Button, TextField, Typography } from "@mui/material";
+import { Box, Button, Link, TextField, Typography } from "@mui/material";
 import React, { useState } from "react"
+import { Navigate } from "react-router-dom";
 
 export const Login = () => {
     const [username, setUsername] = useState<string>('');
@@ -27,8 +28,8 @@ export const Login = () => {
             if (response.status !== 200) {
                 throw new Error(data.message || 'Login failed');
             }
-            localStorage.setItem('authState', JSON.stringify({token: data.accessToken, user: data.username}));
-            
+            localStorage.setItem('authState', JSON.stringify({ token: data.accessToken, user: data.username }));
+
             dispatch({ type: "LOGIN", token: data.accessToken, user: data.username });
         }
         catch (error) {
@@ -37,30 +38,34 @@ export const Login = () => {
     }
 
 
-    return (<div>
+
+    return (
+        <Box>
             <form onSubmit={handleSubmit}>
-                <div>
+                <Box>
                     <TextField
                         label="Name"
                         type="text"
                         value={username}
                         onChange={e => setUsername(e.target.value)}
+                        margin={"normal"}
                     />
-                </div>
-                <div>
-
+                </Box>
+                <Box>
                     <TextField
                         label="Password"
                         type="password"
                         value={password}
                         onChange={e => setPassword(e.target.value)}
+                        margin={"normal"}
                     />
-                </div>
-                <div>
+                </Box>
+                <Box display={"flex"} flexDirection={"column"} justifyContent={"center"}>
                     <Button type="submit">Login</Button>
-                </div>
-                {/* {errorMessage && <p>{errorMessage}</p>} */}
+                </Box>
+                {errorMessage && <p>{errorMessage}</p>}
             </form>
-    </div>)
+        </Box>
+    )
 
 }
