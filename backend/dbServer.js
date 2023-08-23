@@ -1,4 +1,5 @@
 const express = require("express")
+const cors = require('cors')
 const app = express()
 const mysql = require("mysql")
 const bcrypt = require("bcrypt")
@@ -29,18 +30,22 @@ const port = process.env.PORT
 app.listen(port, () => console.log(`Server Started on port ${port}...`))
 
 app.use(express.json())
+app.use(cors({
+   origin: 'http://localhost:3001'
+ }));
 
 app.post("/createUser", async (req, res) => {
    const user = req.body.name;
+   const email = req.body.email;
    try {
       await bcrypt.hash(req.body.password, 10)
-         .then(async (result) => {
+         .then(async (hashedPassword) => {
             db.getConnection(async (err, connection) => {
                if (err) throw (err)
                const sqlSearch = "SELECT * FROM userTable WHERE user = ?"
-               const search_query = mysql.format(sqlSearch, [user])
-               const sqlInsert = "INSERT INTO userTable VALUES (0,?,?)"
-               const insert_query = mysql.format(sqlInsert, [user, result])
+               const search_query = mysql.format(sqlSearch, [user, email])
+               const sqlInsert = "INSERT INTO userTable VALUES (0,?,?,?)"
+               const insert_query = mysql.format(sqlInsert, [user, hashedPassword, email])
               
                try {
                   await connection.query(search_query, async (err, result) => {
@@ -79,6 +84,7 @@ app.post("/createUser", async (req, res) => {
 app.post("/login", async (req, res) => {
    const user = req.body.name;
    const password = req.body.password;
+   console.log(user, password)
    db.getConnection(async (err, connection) => {
       if (err) throw (err)
       const sqlSearch = "SELECT * FROM userTable WHERE user = ?"
@@ -99,7 +105,7 @@ app.post("/login", async (req, res) => {
                   console.log("---------> Generating accessToken")
                   const token = generateAccessToken({ user: user, userId: userId })
                   console.log(token)
-                  res.json({ message: `${user}: ${userId} is logged in!`, accessToken: token })
+                  res.json({ message: `${user}: ${userId} is logged in!`, accessToken: token, username: user })
                }
                else {
                   console.log("Login unsuccessful")
