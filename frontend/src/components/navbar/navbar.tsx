@@ -1,6 +1,8 @@
 import { useAuth } from "@/auth/authContext";
 import { Login } from "@/pages/login/login";
-import { RegisterAccount } from "@/pages/registerPage/registerAccount";
+import { RegisterAccount } from "@/pages/registerAccount/registerAccount";
+import { useServices } from "@/services/services";
+
 import { AppBar, Box, Button, Container, Dialog, Link, Paper, Toolbar, Typography } from "@mui/material"
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +11,7 @@ export const Navbar = () => {
     const [loginDialogOpen, setLoginDialogOpen] = useState<boolean>(false);
     const [displayLogin, setDisplayLogin] = useState<boolean>(true)
     const [state, dispatch] = useAuth();
+    const { logout } = useServices();
 
     const handleClickOpen = (id: "register" | "login") => {
         (id == "register") ? setDisplayLogin(false) : setDisplayLogin(true)
@@ -21,6 +24,7 @@ export const Navbar = () => {
     const navigate = useNavigate()
 
     const handleLogOut = () => {
+        logout();
         dispatch({ type: "LOGOUT" })
     }
 
@@ -54,7 +58,7 @@ export const Navbar = () => {
                 </Toolbar>
                 <Dialog open={loginDialogOpen} onClose={handleClickClose}>
                     <Paper elevation={24} >
-                        <Box padding={5}>
+                        <Box padding={4}>
                             <Container>
                             {displayLogin ? 
                                 <div>
@@ -72,7 +76,6 @@ export const Navbar = () => {
                             </Container>
                         </Box>
                     </Paper>
-
                 </Dialog>
 
             </Container>

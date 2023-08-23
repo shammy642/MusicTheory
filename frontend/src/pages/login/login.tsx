@@ -1,46 +1,22 @@
-import { useAuth } from "@/auth/authContext";
+import { useServices } from "@/services/services";
 import { Box, Button, Link, TextField, Typography } from "@mui/material";
 import React, { useState } from "react"
-import { Navigate } from "react-router-dom";
 
 export const Login = () => {
     const [username, setUsername] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-    const [errorMessage, setErrorMessage] = useState<string>('');
-    const [state, dispatch] = useAuth();
+    const { login } = useServices()
 
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-
-        try {
-            const response = await fetch('http://localhost:3000/login', {
-                method: "POST",
-                body: JSON.stringify({
-                    name: username,
-                    password: password
-                }),
-                headers: {
-                    "Content-type": "application/json",
-                },
-            });
-            const data = await response.json();
-
-            if (response.status !== 200) {
-                throw new Error(data.message || 'Login failed');
-            }
-            localStorage.setItem('authState', JSON.stringify({ token: data.accessToken, user: data.username }));
-
-            dispatch({ type: "LOGIN", token: data.accessToken, user: data.username });
-        }
-        catch (error) {
-            setErrorMessage(errorMessage);
-        }
+        login({ username, password })
     }
-
-
 
     return (
         <Box>
+            <Box display={"flex"} justifyContent={"center"} marginBottom={3}>
+                <Typography variant="h5" color="primary">Login to your account</Typography>
+            </Box>
             <form onSubmit={handleSubmit}>
                 <Box>
                     <TextField
@@ -48,7 +24,8 @@ export const Login = () => {
                         type="text"
                         value={username}
                         onChange={e => setUsername(e.target.value)}
-                        margin={"normal"}
+                        margin={"dense"}
+                        sx={{width: "100%"}}
                     />
                 </Box>
                 <Box>
@@ -57,13 +34,13 @@ export const Login = () => {
                         type="password"
                         value={password}
                         onChange={e => setPassword(e.target.value)}
-                        margin={"normal"}
+                        margin={"dense"}
+                        sx={{width: "100%"}}
                     />
                 </Box>
-                <Box display={"flex"} flexDirection={"column"} justifyContent={"center"}>
+                <Box display={"flex"} justifyContent={"center"} margin={2}>
                     <Button type="submit">Login</Button>
                 </Box>
-                {errorMessage && <p>{errorMessage}</p>}
             </form>
         </Box>
     )
