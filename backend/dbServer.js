@@ -37,8 +37,11 @@ app.use(cors({
 app.post("/createUser", async (req, res) => {
    const user = req.body.name;
    const email = req.body.email;
+   const password = req.body.password;
+   //REMEMBER TO ADD VALIDATION!!!!
+
    try {
-      await bcrypt.hash(req.body.password, 10)
+      await bcrypt.hash(password, 10)
          .then(async (hashedPassword) => {
             db.getConnection(async (err, connection) => {
                if (err) throw (err)
@@ -55,23 +58,21 @@ app.post("/createUser", async (req, res) => {
                      if (result.length != 0) {
                         connection.release()
                         console.log("------> User already exists")
-                        res.sendStatus(409)
+                        res.status(409).json({ message: "User already exists" });
                      }
                      else {
                         await connection.query(insert_query, (err, result) => {
                            connection.release()
                            if (err) throw (err)
-                           console.log("--------> Created new User")
-                           console.log(result.insertId)
-                           res.sendStatus(201)
+                           console.log("--------> Created new User", result.insertId)
+                           res.status(201).json({ message: "User created successfully", userId: result.insertId });
                         })
                      }
                   })
-               }
-               catch (error) {
-                  connection.release()
-                  console.log("Error: ", error)
-               }
+               } catch (error) {
+                  console.error("Error:", error);
+                  return res.status(500).json({ message: "Internal Server Error" });
+              }
             })
          })
    }
@@ -84,7 +85,6 @@ app.post("/createUser", async (req, res) => {
 app.post("/login", async (req, res) => {
    const user = req.body.name;
    const password = req.body.password;
-   console.log(user, password)
    db.getConnection(async (err, connection) => {
       if (err) throw (err)
       const sqlSearch = "SELECT * FROM userTable WHERE user = ?"
@@ -95,7 +95,7 @@ app.post("/login", async (req, res) => {
             if (err) throw (err)
             if (result.length == 0) {
                console.log("User does not exist")
-               res.sendStatus(404)
+               res.sendStatus(404).json({ message: "User does not exist"});
             }
             else {
                const hashedPassword = result[0].password
@@ -104,8 +104,7 @@ app.post("/login", async (req, res) => {
                   console.log(`${user}--------> Login successful`)
                   console.log("---------> Generating accessToken")
                   const token = generateAccessToken({ user: user, userId: userId })
-                  console.log(token)
-                  res.json({ message: `${user}: ${userId} is logged in!`, accessToken: token, username: user })
+                  res.json({ message: "User is logged in!", username: user, accessToken: token })
                }
                else {
                   console.log("Login unsuccessful")
