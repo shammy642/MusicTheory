@@ -2,7 +2,6 @@ import { AuthContext } from "@/auth/authContext";
 import { authReducer } from "@/auth/authReducer";
 import { Navbar } from "@/components/navbar/navbar";
 import { Box, Container } from "@mui/material";
-import { parse } from "path";
 import { useReducer } from "react";
 import { Outlet } from "react-router-dom";
 
@@ -13,15 +12,13 @@ export const MainLayoutWithContext = () => {
     if (savedState) {
         let parsedState = JSON.parse(savedState);
         console.log(parsedState)
-        initialState = { isAuthenticated: true, user: parsedState.user, token: parsedState.token };
+        initialState = { isAuthenticated: true, user: parsedState.user, token: parsedState.token, email: parsedState.email };
         console.log("initialState:", initialState)
     } else {
-        initialState = { isAuthenticated: false, user: null, token: null };
+        initialState = { isAuthenticated: false, user: null, token: null, email: null };
     }
     
     const [state, dispatch] = useReducer(authReducer, initialState);
-    
-    
     
     return (
         <AuthContext.Provider value={[state, dispatch]}>

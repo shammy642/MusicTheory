@@ -1,11 +1,11 @@
-import { useServices } from "@/services/services";
+import { useAuthServices } from "@/services/authServices";
 import { Box, Button, Link, TextField, Typography } from "@mui/material";
 import React, { useState } from "react"
 
 export const Login = () => {
     const [username, setUsername] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-    const { login } = useServices()
+    const { login } = useAuthServices()
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();

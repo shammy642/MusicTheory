@@ -1,6 +1,14 @@
-import { useServices } from "@/services/services";
+import { useAuthServices } from "@/services/authServices";
 import { Box, Button, TextField, Typography } from "@mui/material"
 import { useState } from "react";
+
+
+/* TODO
+** Display loading icon when awaiting response from API
+** Add validation
+** Add confirmation password box
+** Send email to confirm real account
+*/
 
 export const RegisterAccount = () => {
     const [username, setUsername] = useState<string>('');
@@ -9,7 +17,7 @@ export const RegisterAccount = () => {
     // const [confirmPassword, setConfirmPassword] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const { login, register } = useServices();
+    const { login, register } = useAuthServices();
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();

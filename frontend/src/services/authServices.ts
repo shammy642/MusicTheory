@@ -12,7 +12,7 @@ type registerServiceProps = {
 
 const databaseUrl = 'http://localhost:3000';
 
-export const useServices = () => {
+export const useAuthServices = () => {
     const [state, dispatch] = useAuth();
 
     const login = async ({ username, password }: loginServiceProps) => {
@@ -34,8 +34,8 @@ export const useServices = () => {
                 throw new Error(data.message || 'Login failed');
             }
 
-            localStorage.setItem('authState', JSON.stringify({ token: data.accessToken, user: data.username }));
-            dispatch({ type: "LOGIN", token: data.accessToken, user: data.username });
+            localStorage.setItem('authState', JSON.stringify({ token: data.accessToken, user: data.username, email: data.email }));
+            dispatch({ type: "LOGIN", token: data.accessToken, user: data.username, email: data.email });
 
         }
         catch (error) {
@@ -50,7 +50,7 @@ export const useServices = () => {
     const register = async ({ username, password, email }: registerServiceProps) => {
 
         try {
-            const response = await fetch("http://localhost:3000/createUser", {
+            const response = await fetch(`${databaseUrl}/createUser`, {
                 method: "POST",
                 body: JSON.stringify({
                     name: username,
@@ -66,6 +66,7 @@ export const useServices = () => {
 
             switch (response.status) {
                 case 201: 
+                    console.log("breakpoint: account created")
                     return { registered: true, message: "Account created" };
                 case 400:
                     throw new Error(data.message || "Bad Request: The server could not understand the request.");
