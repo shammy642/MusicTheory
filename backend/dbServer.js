@@ -5,6 +5,7 @@ const mysql = require("mysql")
 const bcrypt = require("bcrypt")
 const generateAccessToken = require("./generateAccessToken")
 const authenticateAccessToken = require("./authenticateAccessToken")
+const router = express.Router();
 
 require("dotenv").config()
 const DB_HOST = process.env.DB_HOST
@@ -31,14 +32,16 @@ app.listen(port, () => console.log(`Server Started on port ${port}...`))
 
 app.use(express.json())
 app.use(cors({
-   origin: 'http://localhost:3001'
- }));
+   origin: 'http://localhost:3001/'
+}));
+app.use("/api", router)
 
-app.post("/createUser", async (req, res) => {
+
+router.post("/createUser", async (req, res) => {
    const user = req.body.name;
    const email = req.body.email;
    const password = req.body.password;
-   //REMEMBER TO ADD VALIDATION!!!!
+   //ADD VALIDATION!!!!
 
    try {
       await bcrypt.hash(password, 10)
@@ -49,7 +52,7 @@ app.post("/createUser", async (req, res) => {
                const search_query = mysql.format(sqlSearch, [user, email])
                const sqlInsert = "INSERT INTO userTable VALUES (0,?,?,?)"
                const insert_query = mysql.format(sqlInsert, [user, hashedPassword, email])
-              
+
                try {
                   await connection.query(search_query, async (err, result) => {
                      if (err) throw (err)
@@ -72,7 +75,7 @@ app.post("/createUser", async (req, res) => {
                } catch (error) {
                   console.error("Error:", error);
                   return res.status(500).json({ message: "Internal Server Error" });
-              }
+               }
             })
          })
    }
@@ -82,7 +85,7 @@ app.post("/createUser", async (req, res) => {
 })
 
 //Login
-app.post("/login", async (req, res) => {
+router.post("/login", async (req, res) => {
    const user = req.body.name;
    const password = req.body.password;
    db.getConnection(async (err, connection) => {
@@ -95,7 +98,7 @@ app.post("/login", async (req, res) => {
             if (err) throw (err)
             if (result.length == 0) {
                console.log("User does not exist")
-               res.sendStatus(404).json({ message: "User does not exist"});
+               res.sendStatus(404).json({ message: "User does not exist" });
             }
             else {
                const hashedPassword = result[0].password
@@ -119,70 +122,79 @@ app.post("/login", async (req, res) => {
    })
 })
 
-app.post("/completeSection", authenticateAccessToken, async (req, res) => {
-   const sectionName = req.body.sectionName;
+router.post("/completeExercise", authenticateAccessToken, async (req, res) => {
+   const exerciseId = req.body.exerciseId;
    const userId = req.user.userId;
 
    db.getConnection(async (err, connection) => {
-      if (err) throw (err);
+      if (err) {
+         console.error('Database connection error:', err);
+         return res.status(500).send("Internal server error.");
+      }
 
-      const sqlGetSelection = "SELECT sectionId FROM sectionsTable WHERE sectionName = ?";
-      const getSectionQuery = mysql.format(sqlGetSelection, [sectionName]);
+      // Validate whether exerciseId exists in exercisesTable
+      const sqlValidate = "SELECT 1 FROM exercisesTable WHERE exerciseId = ?";
+      const validateQuery = mysql.format(sqlValidate, [exerciseId]);
 
-      try {
-         await connection.query(getSectionQuery, async (err, sectionResult) => {
-            if (err || sectionResult.length == 0) {
-               connection.release();
-               return res.status(400).send("Invalid section name.")
+      await connection.query(validateQuery, async (err, results) => {
+         if (err) {
+            connection.release();
+            console.error('Error during validation:', err);
+            return res.status(500).send("Internal server error.");
+         }
+
+         if (results.length === 0) {
+            connection.release();
+            return res.status(400).send("Invalid exerciseId provided.");
+         }
+
+         
+         const sqlInsert = "INSERT INTO userExercises (userId, exerciseId) VALUES (?, ?)";
+         const insertQuery = mysql.format(sqlInsert, [userId, exerciseId]);
+
+         await connection.query(insertQuery, (err) => {
+            connection.release();
+
+            if (err) {
+               console.error(`Error while inserting data for User ${userId} and Exercise ${exerciseId}:`, err);
+               return res.status(500).send("Failed to record completed exercise.");
             }
 
-            const sectionId = sectionResult[0].sectionId;
-
-            const sqlInsert = "INSERT INTO userSectionsCompleted (userId, sectionID) VALUES (?, ?)";
-            const insert_query = mysql.format(sqlInsert, [userId, sectionId]);
-
-            await connection.query(insert_query, (err) => {
-
-               connection.release();
-               if (err) throw (err);
-               console.log(`User ${userId} completed section ${sectionName}`);
-               res.status(201).send(`User ${userId} completed section ${sectionName}`);
-            });
+            console.log(`User ${userId} completed exercise with exerciseId: ${exerciseId}`);
+            res.status(201).send(`User ${userId} completed exercise with exerciseId: ${exerciseId}`);
          });
-      } catch (error) {
-         console.log(error);
-      }
-   })
-})
+      });
+   });
+});
 
-app.get("/completeSections", authenticateAccessToken, async (req, res) => {
+
+router.get("/completeExercises", authenticateAccessToken, async (req, res) => {
    const userId = req.user.userId;
 
-   const sqlGetSections = "SELECT sectionId FROM userSectionsCompleted WHERE userId = ?";
+   const sqlGetSections = `SELECT s.exerciseId, s.exerciseName FROM exercisesTable AS s JOIN (SELECT exerciseId FROM userExercises WHERE userId = ? GROUP BY exerciseId) AS u ON s.exerciseId = u.exerciseId`;
    const getSectionQuery = mysql.format(sqlGetSections, [userId]);
 
-   db.getConnection((err, connection) => {
-       if (err) {
-           console.error("Error connecting to the database:", err);
-           return res.status(500).send("Internal server error");
-       }
+   db.getConnection(async (err, connection) => {
+      if (err) {
+         console.error("Error connecting to the database:", err);
+         return res.status(500).send("Internal server error");
+      }
 
-       connection.query(getSectionQuery, (err, results) => {
-           connection.release();
+      await connection.query(getSectionQuery, (err, results) => {
+         connection.release();
 
-           if (err) {
-               console.error("Error fetching data from the database:", err);
-               return res.status(500).send("Internal server error");
-           }
+         if (err) {
+            console.error("Error fetching data from the database:", err);
+            return res.status(500).send("Internal server error");
+         }
 
-           if (results.length == 0) {
-               return res.status(404).send("No completed sections found for this user");
-           }
+         if (results.length == 0) {
+            return res.status(404).send("No completed sections found for this user");
+         }
+         const completedExercises = results.map(row => ({ exerciseId: row.exerciseId, exerciseName: row.exerciseName }));
 
-           const completedSections = results.map(row => row.sectionId);
-           
-           return res.json({"completedSections": completedSections});
-       });
+         return res.json({ "completedExercises": completedExercises });
+      });
    });
 });
 
