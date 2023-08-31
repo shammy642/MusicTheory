@@ -148,7 +148,6 @@ router.post("/completeExercise", authenticateAccessToken, async (req, res) => {
             return res.status(400).send("Invalid exerciseId provided.");
          }
 
-         
          const sqlInsert = "INSERT INTO userExercises (userId, exerciseId) VALUES (?, ?)";
          const insertQuery = mysql.format(sqlInsert, [userId, exerciseId]);
 
@@ -197,4 +196,32 @@ router.get("/completeExercises", authenticateAccessToken, async (req, res) => {
       });
    });
 });
+
+router.get("/allExercises", async (req, res) => {
+   const sqlGetExercises = "SELECT * FROM exercisesTable";
+   const getExercisesQuery = mysql.format(sqlGetExercises);
+
+   db.getConnection(async (err, connection) => {
+      if (err) {
+         console.error("Error connecting to the database:", err);
+         return res.status(500).send("Internal server error");
+      }
+      await connection.query(getExercisesQuery, (err, results) => {
+         connection.release();
+
+         if (err) {
+            console.log("Error fetching data from the database:", err);
+            return res.status(500).send("Internal server error");
+         }
+         
+         if (results.length == 0) {
+            return res.status(404).send("No completed sections found for this user");
+         }
+
+         const allExercises = results
+
+         return res.json({"allExercises": allExercises})
+      });
+   })
+})
 
