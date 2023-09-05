@@ -11,7 +11,7 @@ export const NoteNames2 = () => {
     const [index, setIndex] = useState<number>(0)
     const navigate = useNavigate();
 
-    const questions:answers[] = ["d2","a1","e1"]
+    const questions: answers[] = ["d2", "a1", "e1"]
     const nextQuestion = () => {
         if (index < questions.length - 1) {
             setIndex(index + 1)
@@ -23,7 +23,7 @@ export const NoteNames2 = () => {
     }
     return (
         <React.Fragment>
-        <TypeKeyboardKey selectedKey={questions[index]} completedCallback={nextQuestion} />
+            <TypeKeyboardKey selectedKey={questions[index]} callback={nextQuestion} />
         </React.Fragment>
     )
 }

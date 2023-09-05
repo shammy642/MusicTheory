@@ -1,21 +1,19 @@
-import { useAuth } from "@/auth/authContext";
+import { useAuth } from "@/stateManagement/auth/useAuth";
 import { Login } from "@/pages/login/login";
 import { Profile } from "@/pages/profile/profile";
 import { RegisterAccount } from "@/pages/registerAccount/registerAccount";
-import { useAuthServices } from "@/services/authServices";
-
 import { AppBar, Box, Button, Container, Dialog, Link, Paper, Stack, Toolbar, Typography } from "@mui/material"
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Popup } from "../popup/popup";
-import userEvent from "@testing-library/user-event";
-import React from "react";
 import StarRateIcon from '@mui/icons-material/StarRate';
+import { useUserProgress } from "@/stateManagement/userProgress/useUserProgress";
 
 export const Navbar = () => {
     const [loginDialogOpen, setLoginDialogOpen] = useState<boolean>(false);
     const [displayLogin, setDisplayLogin] = useState<boolean>(true)
-    const [state, dispatch] = useAuth();
+    const [authState] = useAuth();
+    const [userProgressState] = useUserProgress();
 
 
     const handleClickOpen = (id: "register" | "login") => {
@@ -32,7 +30,7 @@ export const Navbar = () => {
         if (loginDialogOpen) {
             setLoginDialogOpen(false)
         }
-    }, [state])
+    }, [authState])
 
     return (
         <AppBar component="nav" position="static" sx={{ borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
@@ -42,12 +40,12 @@ export const Navbar = () => {
                         <Typography variant="h6" component="div" sx={{ cursor: "pointer" }} onClick={() => navigate('/contents-page')}>
                             Learn Music Theory!
                         </Typography>
-                        {state.isAuthenticated ?
+                        {authState.isAuthenticated ?
                             <Box>
                                 <Popup button={
                                     <Stack direction="row" spacing={1} display="flex" alignItems="center">
-                                        <Typography>{state.user}</Typography>
-                                        <Typography><StarRateIcon fontSize="large"/>{}</Typography>
+                                        <Typography>{authState.user}</Typography>
+                                        <StarRateIcon fontSize="large"/>{userProgressState.completedExercises?.length}
                                     </Stack> 
                                 }>
                                     <Profile />

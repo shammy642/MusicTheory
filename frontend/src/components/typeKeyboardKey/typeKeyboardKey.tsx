@@ -5,10 +5,10 @@ import { Box, Button, TextField, Typography } from "@mui/material"
 
 type TypeKeyboardKeyProps = {
     selectedKey: 'c1' | 'cs1' | 'd1' | 'ds1' | 'e1' | 'f1' | 'fs1' | 'g1' | 'gs1' | 'a1' | 'as1' | 'b1' | 'c2' | 'cs2' | 'd2' | 'ds2' | 'e2' | 'f2' | 'fs2' | 'g2' | 'gs2' | 'a2' | 'as2' | 'b2',
-    completedCallback?: () => void;
+    callback?: () => void;
 }
 
-export const TypeKeyboardKey = ({ selectedKey, completedCallback }: TypeKeyboardKeyProps) => {
+export const TypeKeyboardKey = ({ selectedKey, callback }: TypeKeyboardKeyProps) => {
     const [verifyResponse, setVerifyResponse] = useState<string>()
     const [inputValue, setInputValue] = useState<string>()
 
@@ -20,7 +20,7 @@ export const TypeKeyboardKey = ({ selectedKey, completedCallback }: TypeKeyboard
             setTimeout(() => {
                 setVerifyResponse("")
                 setInputValue("")
-                completedCallback && completedCallback()
+                callback && callback()
             }, 1000);
         }
         else {
@@ -45,7 +45,6 @@ export const TypeKeyboardKey = ({ selectedKey, completedCallback }: TypeKeyboard
                 <Keyboard selectedKeys={{ [selectedKey]: true }}></Keyboard>
                 <TextField id="note-input" variant="outlined" value={inputValue} onChange={handleChange} onKeyDown={(event => (event.key === "Backspace") && setInputValue(""))}/>
                 {verifyResponse || !inputValue ? <Typography variant="h4">{verifyResponse}</Typography> : <Button onClick={handleClick}>Check</Button>}
-
             </Box>
         </React.Fragment>)
 }

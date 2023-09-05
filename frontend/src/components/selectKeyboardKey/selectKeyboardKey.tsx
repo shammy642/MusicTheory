@@ -26,7 +26,7 @@ export const SelectKeyboardKey = ({ question, answer, completedCallback }: Selec
             setVerifyResponse("Please click at least one note!")
         } else if (selectedKeysArray.sort().join() === answer.sort().join()) {
             setVerifyResponse("Correct! Well done!")
-            setTimeout(function(){
+            setTimeout(() => {
                 setSelectedKeys({})
                 completedCallback && completedCallback()
                 setVerifyResponse("")

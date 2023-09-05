@@ -1,4 +1,6 @@
-import { useAuth } from "@/auth/authContext"
+import { useAuth } from "@/stateManagement/auth/useAuth"
+import { DATABASEURL } from "./config"
+import jwt_decode from "jwt-decode";
 
 type loginServiceProps = {
     username: string,
@@ -10,15 +12,20 @@ type registerServiceProps = {
     email: string
 }
 
-const databaseUrl = 'http://localhost:3000';
+type jwt = {
+    user: string;
+    userId: number;
+    iat: number;
+    exp: number;
+}
 
 export const useAuthServices = () => {
-    const [state, dispatch] = useAuth();
+    const [authState, authDispatch] = useAuth();
 
     const login = async ({ username, password }: loginServiceProps) => {
 
         try {
-            const response = await fetch(`${databaseUrl}/login`, {
+            const response = await fetch(`${DATABASEURL}/login`, {
                 method: "POST",
                 body: JSON.stringify({
                     name: username,
@@ -29,28 +36,38 @@ export const useAuthServices = () => {
                 },
             });
             const data = await response.json();
-
+            const decodedJwt = <jwt>jwt_decode(data.accessToken)
+            const tokenExpiryTime = decodedJwt.exp*1000
             if (response.status !== 200) {
                 throw new Error(data.message || 'Login failed');
             }
 
-            localStorage.setItem('authState', JSON.stringify({ token: data.accessToken, user: data.username, email: data.email }));
-            dispatch({ type: "LOGIN", token: data.accessToken, user: data.username, email: data.email });
+            localStorage.setItem('authState', JSON.stringify({ token: data.accessToken, user: data.username, email: data.email, tokenExpiryTime: tokenExpiryTime }));
+            authDispatch({ type: "LOGIN", token: data.accessToken, user: data.username, email: data.email, tokenExpiryTime: tokenExpiryTime });
+            handleAccessTokenExpiry(tokenExpiryTime)
+        }
+        catch (err) {
+            console.log(err)
+        }
+    }
 
-        }
-        catch (error) {
-            console.log(error)
-        }
+
+    const handleAccessTokenExpiry = (tokenExpiryTime: number) => {
+            const logoutTimerDuration = tokenExpiryTime - Date.now();
+            setTimeout(() => {
+                logout();
+            }, logoutTimerDuration);
     }
 
     const logout = () => {
         localStorage.removeItem('authState')
+        authDispatch({ type: "LOGOUT" })
     }
 
     const register = async ({ username, password, email }: registerServiceProps) => {
 
         try {
-            const response = await fetch(`${databaseUrl}/createUser`, {
+            const response = await fetch(`${DATABASEURL}/createUser`, {
                 method: "POST",
                 body: JSON.stringify({
                     name: username,
@@ -62,11 +79,10 @@ export const useAuthServices = () => {
                 },
             });
             const data = await response.json();
-            
+
 
             switch (response.status) {
-                case 201: 
-                    console.log("breakpoint: account created")
+                case 201:
                     return { registered: true, message: "Account created" };
                 case 400:
                     throw new Error(data.message || "Bad Request: The server could not understand the request.");
@@ -84,11 +100,10 @@ export const useAuthServices = () => {
         }
         catch (error) {
             console.log(error)
-            // return { registered: false, message: error };
         }
     }
     return {
-        login, logout, register
+        login, logout, register, handleAccessTokenExpiry
     }
 
 }

@@ -1,0 +1,1 @@
+export const DATABASEURL = 'http://localhost:3000/api';
