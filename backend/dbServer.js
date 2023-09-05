@@ -32,10 +32,9 @@ app.listen(port, () => console.log(`Server Started on port ${port}...`))
 
 app.use(express.json())
 app.use(cors({
-   origin: 'http://localhost:3001/'
+   origin: ['http://localhost:3001', 'http://localhost:3001/',]
 }));
 app.use("/api", router)
-
 
 router.post("/createUser", async (req, res) => {
    const user = req.body.name;
@@ -57,7 +56,7 @@ router.post("/createUser", async (req, res) => {
                   await connection.query(search_query, async (err, result) => {
                      if (err) throw (err)
                      console.log("------> Search Results")
-                     console.log(result.length)
+                     
                      if (result.length != 0) {
                         connection.release()
                         console.log("------> User already exists")
@@ -88,6 +87,8 @@ router.post("/createUser", async (req, res) => {
 router.post("/login", async (req, res) => {
    const user = req.body.name;
    const password = req.body.password;
+   const currentTime = Date.now();
+
    db.getConnection(async (err, connection) => {
       if (err) throw (err)
       const sqlSearch = "SELECT * FROM userTable WHERE user = ?"
@@ -107,7 +108,7 @@ router.post("/login", async (req, res) => {
                   console.log(`${user}--------> Login successful`)
                   console.log("---------> Generating accessToken")
                   const token = generateAccessToken({ user: user, userId: userId })
-                  res.json({ message: "User is logged in!", username: user, accessToken: token })
+                  res.json({ message: "User is logged in!", username: user, accessToken: token})
                }
                else {
                   console.log("Login unsuccessful")
