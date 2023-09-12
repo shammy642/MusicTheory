@@ -1,228 +1,255 @@
+const { Sequelize, DataTypes } = require('sequelize');
 const express = require("express")
 const cors = require('cors')
 const app = express()
-const mysql = require("mysql")
+const router = express.Router();
 const bcrypt = require("bcrypt")
 const generateAccessToken = require("./generateAccessToken")
 const authenticateAccessToken = require("./authenticateAccessToken")
-const router = express.Router();
-
 require("dotenv").config()
-const DB_HOST = process.env.DB_HOST
+
 const DB_USER = process.env.DB_USER
 const DB_PASSWORD = process.env.DB_PASSWORD
 const DB_DATABASE = process.env.DB_DATABASE
-const DB_PORT = process.env.DB_PORT
 
-const db = mysql.createPool({
-   connectionLimit: 100,
-   host: DB_HOST,
-   user: DB_USER,
-   password: DB_PASSWORD,
-   database: DB_DATABASE,
-   port: DB_PORT
-})
-
-db.getConnection((err, connection) => {
-   if (err) throw (err)
-   console.log("DB connected successful: " + connection.threadId)
-})
-const port = process.env.PORT
-app.listen(port, () => console.log(`Server Started on port ${port}...`))
-
+//Connect to database
+const sequelize = new Sequelize(DB_DATABASE, DB_USER, DB_PASSWORD, {
+    host: 'localhost',
+    dialect: 'mysql'
+});
 app.use(express.json())
 app.use(cors({
-   origin: ['http://localhost:3001', 'http://localhost:3001/',]
+    origin: ['http://localhost:3001', 'http://localhost:3001/',]
 }));
 app.use("/api", router)
 
+sequelize.sync()
+    .then(() => {
+        console.log('Connected to the database.');
+    })
+    .catch((error) => {
+        console.error('Unable to connect to the database:', error);
+    });
+
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+
+const exercises = sequelize.define("exercises", {
+    type: { type: DataTypes.TEXT, allowNull: false },
+    question: { type: DataTypes.TEXT, allowNull: true },
+    answer: { type: DataTypes.TEXT, allowNull: false }
+});
+
+const quizes = sequelize.define("quizes", {
+    section: { type: DataTypes.TEXT, allowNull: false },
+});
+
+const quizExercises = sequelize.define("quizExercises", {
+    quizId: {
+        type: DataTypes.INTEGER,
+        references: {
+            model: quizes,
+            key: 'id'
+        }
+    },
+    exerciseId: {
+        type: DataTypes.INTEGER,
+        references: {
+            model: exercises,
+            key: 'id'
+        }
+    }
+}, {
+    timestamps: false
+})
+
+quizes.belongsToMany(exercises, {
+    through: quizExercises,
+    as: 'Exercises',
+    foreignKey: 'quizId',
+    otherKey: 'exerciseId',
+    onDelete: 'CASCADE'
+});
+exercises.belongsToMany(quizes, {
+    through: quizExercises,
+    as: 'Quizes',
+    foreignKey: 'exerciseId',
+    otherKey: 'quizId',
+    onDelete: 'CASCADE'
+});
+
+
+const userQuizes = sequelize.define("userQuizes", {
+    userId: { type: DataTypes.INTEGER, allowNull: false },
+    quizId: { type: DataTypes.INTEGER, allowNull: false }
+}, {
+    indexes: [
+        {
+          unique: true,
+          fields: ['userId', 'quizId']
+        }
+      ]
+});
+
+const users = sequelize.define("users", {
+    userName: { type: DataTypes.TEXT, allowNull: false },
+    classroomId: DataTypes.INTEGER,
+    password: { type: DataTypes.TEXT, allowNull: false },
+    emailAddress: { type: DataTypes.TEXT, allowNull: false }
+})
+
+router.get("/quizQuestions", async (req, res) => {
+    const quizId = req.query.quizId;
+    try {
+        quizes.findByPk(quizId, {
+            include: {
+                model: exercises,
+                as: 'Exercises',
+                attributes: ['type', 'question', 'answer'],
+                through: { attributes: [] }
+            }
+        }).then((data) => {
+            res.status(200).send({ quizQuestions: data });
+        });
+    } catch (error) {
+        console.error("Error fetching exercises for quiz:", error);
+        res.status(500).send({ error: "Failed to fetch quiz questions." });
+    }
+});
+
 router.post("/createUser", async (req, res) => {
-   const user = req.body.name;
-   const email = req.body.email;
-   const password = req.body.password;
-   //ADD VALIDATION!!!!
+    const userName = req.body.userName;
+    const emailAddress = req.body.emailAddress;
+    const password = req.body.password;
 
-   try {
-      await bcrypt.hash(password, 10)
-         .then(async (hashedPassword) => {
-            db.getConnection(async (err, connection) => {
-               if (err) throw (err)
-               const sqlSearch = "SELECT * FROM userTable WHERE user = ?"
-               const search_query = mysql.format(sqlSearch, [user, email])
-               const sqlInsert = "INSERT INTO userTable VALUES (0,?,?,?)"
-               const insert_query = mysql.format(sqlInsert, [user, hashedPassword, email])
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const isExistingUserName = await users.findOne({ where: { userName: userName } });
 
-               try {
-                  await connection.query(search_query, async (err, result) => {
-                     if (err) throw (err)
-                     console.log("------> Search Results")
-                     
-                     if (result.length != 0) {
-                        connection.release()
-                        console.log("------> User already exists")
-                        res.status(409).json({ message: "User already exists" });
-                     }
-                     else {
-                        await connection.query(insert_query, (err, result) => {
-                           connection.release()
-                           if (err) throw (err)
-                           console.log("--------> Created new User", result.insertId)
-                           res.status(201).json({ message: "User created successfully", userId: result.insertId });
-                        })
-                     }
-                  })
-               } catch (error) {
-                  console.error("Error:", error);
-                  return res.status(500).json({ message: "Internal Server Error" });
-               }
-            })
-         })
-   }
-   catch (error) {
-      console.log(error)
-   }
-})
+        if (isExistingUserName) {
+            return res.status(409).send({ message: 'Username already exists' });
+        }
 
-//Login
+        const isExistingEmail = await users.findOne({ where: { emailAddress: emailAddress } });
+
+        if (isExistingEmail) {
+            return res.status(409).send({ message: 'Email already exists' });
+        }
+
+        const user = await users.create({
+            userName: userName,
+            emailAddress: emailAddress,
+            password: hashedPassword
+        });
+
+        res.status(201).send({ message: 'User created successfully', user: user });
+
+    } catch (error) {
+        console.error("Error: ", error);
+        res.status(500).send({ message: 'Server error' });
+    }
+});
+
 router.post("/login", async (req, res) => {
-   const user = req.body.name;
-   const password = req.body.password;
-   const currentTime = Date.now();
+    const userName = req.body.name;
+    const password = req.body.password;
 
-   db.getConnection(async (err, connection) => {
-      if (err) throw (err)
-      const sqlSearch = "SELECT * FROM userTable WHERE user = ?"
-      const search_query = mysql.format(sqlSearch, [user])
-      try {
-         await connection.query(search_query, async (err, result) => {
-            connection.release()
-            if (err) throw (err)
-            if (result.length == 0) {
-               console.log("User does not exist")
-               res.sendStatus(404).json({ message: "User does not exist" });
-            }
-            else {
-               const hashedPassword = result[0].password
-               const userId = result[0].userId
-               if (await bcrypt.compare(password, hashedPassword)) {
-                  console.log(`${user}--------> Login successful`)
-                  console.log("---------> Generating accessToken")
-                  const token = generateAccessToken({ user: user, userId: userId })
-                  res.json({ message: "User is logged in!", username: user, accessToken: token})
-               }
-               else {
-                  console.log("Login unsuccessful")
-                  res.send('Password incorrect!')
-               }
-            }
-         })
-      }
-      catch (error) {
-         console.log(error)
-      }
-   })
-})
+    try {
+        const user = await users.findOne({ where: { userName: userName } });
 
-router.post("/completeExercise", authenticateAccessToken, async (req, res) => {
-   const exerciseId = req.body.exerciseId;
-   const userId = req.user.userId;
+        if (!user) {
+            console.log("User does not exist");
+            return res.status(404).json({ message: 'User does not exist' });
+        }
 
-   db.getConnection(async (err, connection) => {
-      if (err) {
-         console.error('Database connection error:', err);
-         return res.status(500).send("Internal server error.");
-      }
+        const hashedPassword = user.password;
+        const userId = user.id; 
 
-      // Validate whether exerciseId exists in exercisesTable
-      const sqlValidate = "SELECT 1 FROM exercisesTable WHERE exerciseId = ?";
-      const validateQuery = mysql.format(sqlValidate, [exerciseId]);
+        if (await bcrypt.compare(password, hashedPassword)) {
+            console.log(`${userName}--------> Login successful`);
+            console.log("---------> Generating accessToken");
+            const token = generateAccessToken({ user: userName, userId: userId });
+            res.json({ message: "User is logged in!", username: userName, accessToken: token });
+        } else {
+            console.log("Login unsuccessful");
+            res.status(401).send('Password incorrect!');
+        }
 
-      await connection.query(validateQuery, async (err, results) => {
-         if (err) {
-            connection.release();
-            console.error('Error during validation:', err);
-            return res.status(500).send("Internal server error.");
-         }
-
-         if (results.length === 0) {
-            connection.release();
-            return res.status(400).send("Invalid exerciseId provided.");
-         }
-
-         const sqlInsert = "INSERT INTO userExercises (userId, exerciseId) VALUES (?, ?)";
-         const insertQuery = mysql.format(sqlInsert, [userId, exerciseId]);
-
-         await connection.query(insertQuery, (err) => {
-            connection.release();
-
-            if (err) {
-               console.error(`Error while inserting data for User ${userId} and Exercise ${exerciseId}:`, err);
-               return res.status(500).send("Failed to record completed exercise.");
-            }
-
-            console.log(`User ${userId} completed exercise with exerciseId: ${exerciseId}`);
-            res.status(201).send(`User ${userId} completed exercise with exerciseId: ${exerciseId}`);
-         });
-      });
-   });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: 'Server error' });
+    }
 });
 
+router.post("/completeQuiz", authenticateAccessToken, async (req, res) => {
+    const quizId = req.body.quizId;
+    const userId = req.user.userId;
 
-router.get("/completeExercises", authenticateAccessToken, async (req, res) => {
-   const userId = req.user.userId;
+    try {
+        const completedQuiz = await quizes.findOne({ where: { id: quizId } });
 
-   const sqlGetSections = `SELECT s.exerciseId, s.exerciseName FROM exercisesTable AS s JOIN (SELECT exerciseId FROM userExercises WHERE userId = ? GROUP BY exerciseId) AS u ON s.exerciseId = u.exerciseId`;
-   const getSectionQuery = mysql.format(sqlGetSections, [userId]);
-
-   db.getConnection(async (err, connection) => {
-      if (err) {
-         console.error("Error connecting to the database:", err);
-         return res.status(500).send("Internal server error");
-      }
-
-      await connection.query(getSectionQuery, (err, results) => {
-         connection.release();
-
-         if (err) {
-            console.error("Error fetching data from the database:", err);
-            return res.status(500).send("Internal server error");
-         }
-
-         if (results.length == 0) {
-            return res.status(404).send("No completed sections found for this user");
-         }
-         const completedExercises = results.map(row => ({ exerciseId: row.exerciseId, exerciseName: row.exerciseName }));
-
-         return res.json({ "completedExercises": completedExercises });
-      });
-   });
-});
-
-router.get("/allExercises", async (req, res) => {
-   const sqlGetExercises = "SELECT * FROM exercisesTable";
-   const getExercisesQuery = mysql.format(sqlGetExercises);
-
-   db.getConnection(async (err, connection) => {
-      if (err) {
-         console.error("Error connecting to the database:", err);
-         return res.status(500).send("Internal server error");
-      }
-      await connection.query(getExercisesQuery, (err, results) => {
-         connection.release();
-
-         if (err) {
-            console.log("Error fetching data from the database:", err);
-            return res.status(500).send("Internal server error");
-         }
-         
-         if (results.length == 0) {
-            return res.status(404).send("No completed sections found for this user");
-         }
-
-         const allExercises = results
-
-         return res.json({"allExercises": allExercises})
-      });
-   })
+        if (!completedQuiz) {
+            console.log("Quiz does not exist")
+            return res.status(404).json({ message: 'Quiz does not exist' });
+        }
+        
+        await userQuizes.upsert({
+            userId: userId,
+            quizId: quizId
+        })
+        
+        res.status(200).send(`${userId} completed ${quizId} successfully`)
+    }
+    catch (error) {
+        console.log(error)
+        res.status(500).send("Server Error")
+    }
 })
 
+router.get("/completeQuizes", authenticateAccessToken, async (req, res) => {
+    const userId = req.user.userId;
+
+    try {
+        userQuizes.findAll({
+            attributes: [
+                'quizId'
+            ],
+            where: {
+                userId: userId
+            }
+        })
+        .then((data) => {
+            const completedQuizesList = data.map((data) => data.quizId)
+            res.status(200).send({ completedQuizes: completedQuizesList });
+        });
+    } catch (error) {
+        console.error("Error fetching quizes:", error);
+        res.status(500).send({ error: "Failed to fetch completed quizes." });
+    }
+});
+
+router.get("/quizes", async (req, res) => {
+    try {
+        quizes.findAll({
+            attributes: [
+                'id',
+                'section'
+            ]
+        })
+        .then((data) => {
+            const quizListBySection = data.reduce((acc, quiz) => {
+                if (!acc[quiz.section]) {
+                    acc[quiz.section] = [];
+                }
+                acc[quiz.section].push(quiz.id);
+                return acc;
+            }, {});
+            res.status(200).send({ Quizes: quizListBySection });
+        });
+    } catch (error) {
+        console.error("Error fetching quizes:", error);
+        res.status(500).send({ error: "Failed to fetch completed quizes." });
+    }
+});
