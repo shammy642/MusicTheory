@@ -3,66 +3,60 @@ import { UserProgressContext } from "@/stateManagement/userProgress/userProgress
 import { authReducer } from "@/stateManagement/auth/authReducer";
 import { Navbar } from "@/components/navbar/navbar";
 import { Box, Container } from "@mui/material";
-import { useReducer, useEffect, useState } from "react";
+import { useReducer, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { userProgressReducer } from "@/stateManagement/userProgress/userProgressReducer";
 import { useUserProgressServices } from "@/services/userProgressServices";
 import { AuthState } from "@/stateManagement/auth/authTypes";
-import { ExercisesContext } from "@/stateManagement/exercises/exercisesContext";
-import { exercisesReducer } from "@/stateManagement/exercises/exercisesReducer";
-import { useExerciseServices } from "@/services/exerciseServices";
-import { exercisesState } from "@/stateManagement/exercises/exercisesTypes";
+import { QuizesContext } from "@/stateManagement/quizes/quizesContext";
+import { quizesReducer } from "@/stateManagement/quizes/quizesReducer";
+import { useQuizServices } from "@/services/quizServices";
+import { quizesState } from "@/stateManagement/quizes/quizesTypes";
 import { useAuthServices } from "@/services/authServices";
 
-
-
-
 export const MainLayoutWithContext = () => {
-    console.log("MainLayout Rendering...")
     const [authState, authDispatch] = useReducer(authReducer, initialAuthState());
-    const [userProgressState, userProgressDispatch] = useReducer(userProgressReducer, { completedExercises: [] });
-    const [exercisesState, exercisesDispatch] = useReducer(exercisesReducer, { exercises: [] });
+    const [userProgressState, userProgressDispatch] = useReducer(userProgressReducer, { completedQuizes: [] });
+    const [quizesState, quizesDispatch] = useReducer(quizesReducer, { quizes: [] });
 
     return (
-        <ExercisesContext.Provider value={[exercisesState, exercisesDispatch]}>
+        <QuizesContext.Provider value={[quizesState, quizesDispatch]}>
             <AuthContext.Provider value={[authState, authDispatch]}>
                 <UserProgressContext.Provider value={[userProgressState, userProgressDispatch]}>
-                    <Content authState={authState} exercisesState={exercisesState} />
+                    <Content authState={authState} quizesState={quizesState} />
                 </UserProgressContext.Provider>
             </AuthContext.Provider >
-        </ExercisesContext.Provider>
+        </QuizesContext.Provider>
     )
 }
 
 type contentProps = {
     authState: AuthState;
-    exercisesState: exercisesState
+    quizesState: quizesState
 }
 
-const Content = ({ authState, exercisesState }: contentProps) => {
-    console.log("Content Rendering...")
+const Content = ({ authState }: contentProps) => {
     const userServices = useUserProgressServices();
-    const exerciseServices = useExerciseServices();
+    const exerciseServices = useQuizServices();
     const authServices = useAuthServices();
 
     useEffect(() => {
-        if (!exercisesState.exercises) {
-            exerciseServices.getAllExercises()
-        }
-    }, [exercisesState.exercises])
+            exerciseServices.getAllQuizes()
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     useEffect(() => {
         if (authState.isAuthenticated) {
-            userServices.getCompletedExercises();
+            userServices.getCompletedQuizes();
         } else if (!authState.isAuthenticated) {
             userServices.clearUserProgressState();
-        }
+        } // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authState.isAuthenticated]);
 
     useEffect(() => {
         if (authState.tokenExpiryTime) {
             authServices.handleAccessTokenExpiry(authState.tokenExpiryTime)
-        }
+        } // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     return (
@@ -79,16 +73,16 @@ const Content = ({ authState, exercisesState }: contentProps) => {
 
 const initialAuthState = () => {
     const savedAuthState = localStorage.getItem("authState");
-    let authState = { isAuthenticated: false, user: null, token: null, email: null, tokenExpiryTime: null };
+    let authState = { isAuthenticated: false, userName: null, token: null, emailAddress: null, tokenExpiryTime: null };
 
     if (savedAuthState) {
         const parsedAuthState = JSON.parse(savedAuthState);
         if (parsedAuthState.tokenExpiryTime > Date.now()) {
             authState = {
                 isAuthenticated: true,
-                user: parsedAuthState.user,
+                userName: parsedAuthState.userName,
                 token: parsedAuthState.token,
-                email: parsedAuthState.email,
+                emailAddress: parsedAuthState.emailAddress,
                 tokenExpiryTime: parsedAuthState.tokenExpiryTime
             }
         } else {

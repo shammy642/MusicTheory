@@ -2,17 +2,17 @@ import { userProgressAction, userProgressState } from "./userProgressTypes";
 
 export const userProgressReducer = (state: userProgressState, action: userProgressAction): userProgressState => {
     switch (action.type) {
-      case 'ADD_COMPLETED_EXERCISE':
+      case 'ADD_COMPLETED_QUIZ':
         return {
           ...state,
-          completedExercise: action.exerciseId
+          completedQuiz: action.quizId
         };
-        case 'SET_COMPLETED_EXERCISES':
-          if (JSON.stringify(state.completedExercises) === JSON.stringify(action.exerciseIds)) {
+        case 'SET_COMPLETED_QUIZES':
+          if (JSON.stringify(state.completedQuizes) === JSON.stringify(action.quizIds)) {
             return state;
           }
           return {
-            completedExercises: action.exerciseIds
+            completedQuizes: action.quizIds
           };
 
       default:

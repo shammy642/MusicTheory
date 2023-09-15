@@ -6,12 +6,12 @@ export const authReducer = (state: AuthState, action: AuthAction): AuthState => 
       if (state.isAuthenticated) {
         return state;
       }
-      return { isAuthenticated: true, user: action.user, token: action.token, email: action.email, tokenExpiryTime: action.tokenExpiryTime };
+      return { isAuthenticated: true, userName: action.userName, token: action.token, emailAddress: action.emailAddress, tokenExpiryTime: action.tokenExpiryTime };
     case 'LOGOUT':
       if (!state.isAuthenticated) {
         return state;
       }
-      return { isAuthenticated: false, user: null, token: null, email: null, tokenExpiryTime: null };
+      return { isAuthenticated: false, userName: null, token: null, emailAddress: null, tokenExpiryTime: null };
     default:
       return state;
   }

@@ -1,14 +1,14 @@
 import { DATABASEURL } from "./config"
-import { useExercises } from "@/stateManagement/exercises/useExercises";
+import { useQuizes } from "@/stateManagement/quizes/useQuizes";
 
 
-export const useExerciseServices = () => {
-    const [exercisesState, exercisesDispatch] = useExercises();
+export const useQuizServices = () => {
+    const [, quizDispatch] = useQuizes();
 
-    const getAllExercises = async () => {
+    const getAllQuizes= async () => {
         
         try {
-            const response = await fetch(`${DATABASEURL}/allExercises`, {
+            const response = await fetch(`${DATABASEURL}/quizes`, {
                 method: "GET",
                 headers: {
                     "Content-type": "application/json",
@@ -19,13 +19,12 @@ export const useExerciseServices = () => {
             }
 
             const data = await response.json()
-            exercisesDispatch({type: "SET_ALL_EXERCISES", exercises: data.allExercises })
-            
+            quizDispatch({type: "SET_ALL_QUIZES", quizes: data.quizes })
         }
         catch (error) {
             console.log(error)
         }
     }
 
-    return { getAllExercises }
+    return { getAllQuizes }
 }

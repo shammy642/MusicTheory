@@ -1,32 +1,50 @@
 import { useAuthServices } from "@/services/authServices";
-import { Box, Button, TextField, Typography } from "@mui/material"
+import { Box, Button, TextField, Typography, CircularProgress } from "@mui/material";
 import { useState } from "react";
 
-
-/* TODO
-** Display loading icon when awaiting response from API
-** Add validation
-** Add confirmation password box
-** Send email to confirm real account
-*/
-
 export const RegisterAccount = () => {
-    const [username, setUsername] = useState<string>('');
-    const [email, setEmail] = useState<string>('');
+    const [userName, setUserName] = useState<string>('');
+    const [emailAddress, setEmailAddress] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-    // const [confirmPassword, setConfirmPassword] = useState<string>('');
+    const [confirmPassword, setConfirmPassword] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const { login, register } = useAuthServices();
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+
+        if (!userName || !emailAddress || !password || !confirmPassword) {
+            setError('All fields are required.');
+            return;
+        }
+
+        if (userName.length > 50) {
+            setError('Username is too long.');
+            return;
+        }
+
+        if (emailAddress.length > 100) {
+            setError('Email address is too long.');
+            return;
+        }
+
+        if (password.length < 8 || password.length > 50) {
+            setError('Password should be between 8 and 50 characters.');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setError('Passwords do not match.');
+            return;
+        }
+
         setIsLoading(true);
-        const result = await register({ username, password, email });
+        const result = await register({ userName, password, emailAddress });
         if (result) {
             if (result.registered) {
-                setTimeout((() => login({username, password})), 1500)
-                setIsLoading(false)
+                setTimeout(() => login({ userName, password }), 1500);
+                setIsLoading(false);
             }
         }
     }
@@ -41,20 +59,20 @@ export const RegisterAccount = () => {
                     <TextField
                         label="Name"
                         type="text"
-                        value={username}
-                        onChange={e => setUsername(e.target.value)}
+                        value={userName}
+                        onChange={e => setUserName(e.target.value)}
                         margin={"dense"}
-                        sx={{width: "100%"}}
+                        sx={{ width: "100%" }}
                     />
                 </Box>
                 <Box>
                     <TextField
                         label="Email address"
                         type="email"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
+                        value={emailAddress}
+                        onChange={e => setEmailAddress(e.target.value)}
                         margin={"dense"}
-                        sx={{width: "100%"}}
+                        sx={{ width: "100%" }}
                     />
                 </Box>
                 <Box>
@@ -64,22 +82,29 @@ export const RegisterAccount = () => {
                         value={password}
                         onChange={e => setPassword(e.target.value)}
                         margin={"dense"}
-                        sx={{width: "100%"}}
+                        sx={{ width: "100%" }}
                     />
                 </Box>
-                {/* <Box>
+                <Box>
                     <TextField
                         label="Confirm password"
                         type="password"
                         value={confirmPassword}
                         onChange={e => setConfirmPassword(e.target.value)}
                         margin={"dense"}
-                        fullWidth
+                        sx={{ width: "100%" }}
                     />
-                </Box> */}
-                <Box display={"flex"} justifyContent={"center"} margin={2}>
-                    <Button type="submit">Register</Button>
                 </Box>
+                <Box display={"flex"} justifyContent={"center"} margin={2}>
+                    <Button type="submit" disabled={isLoading}>
+                        {isLoading ? <CircularProgress size={24} /> : "Register"}
+                    </Button>
+                </Box>
+                {error && (
+                    <Typography color="error" align="center">
+                        {error}
+                    </Typography>
+                )}
             </form>
         </Box>
     )

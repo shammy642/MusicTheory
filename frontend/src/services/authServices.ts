@@ -3,32 +3,32 @@ import { DATABASEURL } from "./config"
 import jwt_decode from "jwt-decode";
 
 type loginServiceProps = {
-    username: string,
+    userName: string,
     password: string
 }
 type registerServiceProps = {
-    username: string,
+    userName: string,
     password: string,
-    email: string
+    emailAddress: string
 }
 
 type jwt = {
-    user: string;
+    userName: string;
     userId: number;
+    emailAddress: string;
     iat: number;
     exp: number;
 }
 
 export const useAuthServices = () => {
-    const [authState, authDispatch] = useAuth();
-
-    const login = async ({ username, password }: loginServiceProps) => {
+    const [, authDispatch] = useAuth();
+    const login = async ({ userName, password }: loginServiceProps) => {
 
         try {
             const response = await fetch(`${DATABASEURL}/login`, {
                 method: "POST",
                 body: JSON.stringify({
-                    name: username,
+                    name: userName,
                     password: password
                 }),
                 headers: {
@@ -36,21 +36,20 @@ export const useAuthServices = () => {
                 },
             });
             const data = await response.json();
-            const decodedJwt = <jwt>jwt_decode(data.accessToken)
+            const decodedJwt = jwt_decode(data.accessToken) as jwt
             const tokenExpiryTime = decodedJwt.exp*1000
             if (response.status !== 200) {
                 throw new Error(data.message || 'Login failed');
             }
 
-            localStorage.setItem('authState', JSON.stringify({ token: data.accessToken, user: data.username, email: data.email, tokenExpiryTime: tokenExpiryTime }));
-            authDispatch({ type: "LOGIN", token: data.accessToken, user: data.username, email: data.email, tokenExpiryTime: tokenExpiryTime });
+            localStorage.setItem('authState', JSON.stringify({ token: data.accessToken, userName: decodedJwt.userName, emailAddress: decodedJwt.emailAddress, tokenExpiryTime: tokenExpiryTime }));
+            authDispatch({ type: "LOGIN", token: data.accessToken, userName: decodedJwt.userName, emailAddress: decodedJwt.emailAddress, tokenExpiryTime: tokenExpiryTime });
             handleAccessTokenExpiry(tokenExpiryTime)
         }
         catch (err) {
             console.log(err)
         }
     }
-
 
     const handleAccessTokenExpiry = (tokenExpiryTime: number) => {
             const logoutTimerDuration = tokenExpiryTime - Date.now();
@@ -64,14 +63,13 @@ export const useAuthServices = () => {
         authDispatch({ type: "LOGOUT" })
     }
 
-    const register = async ({ username, password, email }: registerServiceProps) => {
-
+    const register = async ({ userName, password, emailAddress }: registerServiceProps) => {
         try {
             const response = await fetch(`${DATABASEURL}/createUser`, {
                 method: "POST",
                 body: JSON.stringify({
-                    name: username,
-                    email: email,
+                    userName: userName,
+                    emailAddress: emailAddress,
                     password: password
                 }),
                 headers: {

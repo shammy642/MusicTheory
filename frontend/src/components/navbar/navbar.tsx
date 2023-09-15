@@ -17,7 +17,7 @@ export const Navbar = () => {
 
 
     const handleClickOpen = (id: "register" | "login") => {
-        (id == "register") ? setDisplayLogin(false) : setDisplayLogin(true)
+        (id === "register") ? setDisplayLogin(false) : setDisplayLogin(true)
         setLoginDialogOpen(true);
     };
 
@@ -29,7 +29,7 @@ export const Navbar = () => {
     useEffect(() => {
         if (loginDialogOpen) {
             setLoginDialogOpen(false)
-        }
+        } // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authState])
 
     return (
@@ -38,14 +38,14 @@ export const Navbar = () => {
                 <Toolbar>
                     <Box width="100%" display="flex" justifyContent="space-between" alignItems={"center"}>
                         <Typography variant="h6" component="div" sx={{ cursor: "pointer" }} onClick={() => navigate('/contents-page')}>
-                            Learn Music Theory!
+                            MUSIC THEORY for Young Children
                         </Typography>
                         {authState.isAuthenticated ?
                             <Box>
                                 <Popup button={
                                     <Stack direction="row" spacing={1} display="flex" alignItems="center">
-                                        <Typography>{authState.user}</Typography>
-                                        <StarRateIcon fontSize="large"/>{userProgressState.completedExercises?.length}
+                                        <Typography>{authState.userName}</Typography>
+                                        <StarRateIcon fontSize="large"/>{userProgressState.completedQuizes?.length}
                                     </Stack> 
                                 }>
                                     <Profile />

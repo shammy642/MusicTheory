@@ -1,16 +1,14 @@
 import React, { useState } from "react"
-import { Keyboard } from "../keyboard/keyboard"
+import { Keyboard } from "@/components/keyboard/keyboard"
 import { Box, Button, Typography } from "@mui/material"
 
-type answers = 'c1' | 'cs1' | 'd1' | 'ds1'| 'e1' | 'f1'| 'fs1' | 'g1' | 'gs1' | 'a1' | 'as1' | 'b1' | 'c2' | 'cs2' | 'd2' | 'ds2' | 'e2' | 'f2'| 'fs2' | 'g2' | 'gs2' | 'a2'| 'as2' | 'b2';
-
-type SelectKeyboardKeyProps = {
+type NoteSelectProps = {
     question: string,
-    answer: answers[],
-    completedCallback?: () => void;
+    answer: string,
+    completedCallback: () => void;
 }
 
-export const SelectKeyboardKey = ({ question, answer, completedCallback }: SelectKeyboardKeyProps) => {
+export const NoteSelect = ({ question, answer, completedCallback }: NoteSelectProps) => {
     const [selectedKeys, setSelectedKeys] = useState<Record<string, boolean>>({})
     const [verifyResponse, setVerifyResponse] = useState<string>()
 
@@ -21,10 +19,11 @@ export const SelectKeyboardKey = ({ question, answer, completedCallback }: Selec
 
     const verifyAnswer = () => {
         const selectedKeysArray = Object.keys(selectedKeys).filter(key => selectedKeys[key]);
-    
+        const answerArray = answer.split(',')
+
         if (selectedKeysArray.length === 0) {
             setVerifyResponse("Please click at least one note!")
-        } else if (selectedKeysArray.sort().join() === answer.sort().join()) {
+        } else if (selectedKeysArray.sort().join() === answerArray.sort().join()) {
             setVerifyResponse("Correct! Well done!")
             setTimeout(() => {
                 setSelectedKeys({})

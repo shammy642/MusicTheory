@@ -1,8 +1,8 @@
 import { useContext } from "react";
-import { ExercisesContext } from "./exercisesContext";
+import { QuizesContext } from "./quizesContext";
 
-export const useExercises = () => {
-  const context = useContext(ExercisesContext);
+export const useQuizes = () => {
+  const context = useContext(QuizesContext);
   if (!context) {
     throw new Error("useExercises must be used within an exercisesProvider.");
   }

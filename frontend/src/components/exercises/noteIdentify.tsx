@@ -3,24 +3,23 @@ import { Keyboard } from "@/components/keyboard/keyboard";
 import { Box, Button, TextField, Typography } from "@mui/material"
 
 
-type TypeKeyboardKeyProps = {
-    selectedKey: 'c1' | 'cs1' | 'd1' | 'ds1' | 'e1' | 'f1' | 'fs1' | 'g1' | 'gs1' | 'a1' | 'as1' | 'b1' | 'c2' | 'cs2' | 'd2' | 'ds2' | 'e2' | 'f2' | 'fs2' | 'g2' | 'gs2' | 'a2' | 'as2' | 'b2',
-    callback?: () => void;
+type NoteIdentifyProps = {
+    answer: 'c1' | 'cs1' | 'd1' | 'ds1' | 'e1' | 'f1' | 'fs1' | 'g1' | 'gs1' | 'a1' | 'as1' | 'b1' | 'c2' | 'cs2' | 'd2' | 'ds2' | 'e2' | 'f2' | 'fs2' | 'g2' | 'gs2' | 'a2' | 'as2' | 'b2',
+    completedCallback: () => void;
 }
 
-export const TypeKeyboardKey = ({ selectedKey, callback }: TypeKeyboardKeyProps) => {
+export const NoteIdentify = ({ answer, completedCallback}: NoteIdentifyProps) => {
     const [verifyResponse, setVerifyResponse] = useState<string>()
-    const [inputValue, setInputValue] = useState<string>()
-
+    const [inputValue, setInputValue] = useState<string>("")
+    
     const handleClick = () => {
-        const answer = selectedKey[0].slice(0, 1);
-
-        if (inputValue === answer) {
+        const theAnswer = answer[0].slice(0, 1);
+        if (inputValue === theAnswer) {
             setVerifyResponse("Correct! Well done!")
             setTimeout(() => {
                 setVerifyResponse("")
                 setInputValue("")
-                callback && callback()
+                completedCallback && completedCallback()
             }, 1000);
         }
         else {
@@ -42,7 +41,7 @@ export const TypeKeyboardKey = ({ selectedKey, callback }: TypeKeyboardKeyProps)
         <React.Fragment>
             <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <Typography variant="h3">What is this note?</Typography>
-                <Keyboard selectedKeys={{ [selectedKey]: true }}></Keyboard>
+                <Keyboard selectedKeys={{ [answer]: true }}></Keyboard>
                 <TextField id="note-input" variant="outlined" value={inputValue} onChange={handleChange} onKeyDown={(event => (event.key === "Backspace") && setInputValue(""))}/>
                 {verifyResponse || !inputValue ? <Typography variant="h4">{verifyResponse}</Typography> : <Button onClick={handleClick}>Check</Button>}
             </Box>

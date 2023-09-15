@@ -1,16 +1,16 @@
 import { useUserProgress } from "@/stateManagement/userProgress/useUserProgress";
 import { DATABASEURL } from "./config";
 import { useAuth } from "@/stateManagement/auth/useAuth";
-import { exercisesProps } from "@/stateManagement/exercises/exercisesTypes";
+import { quizProps } from "@/stateManagement/quizes/quizesTypes";
 
 export const useUserProgressServices = () => {
     const [state, dispatch] = useUserProgress();
     const [authState] = useAuth();
 
-    const getCompletedExercises = async () => {
+    const getCompletedQuizes = async () => {
         if (authState.isAuthenticated) {
             try {
-                const response = await fetch(`${DATABASEURL}/completeExercises`, {
+                const response = await fetch(`${DATABASEURL}/completeQuizes`, {
                     method: "GET",
                     headers: {
                         "Content-type": "application/json",
@@ -22,9 +22,8 @@ export const useUserProgressServices = () => {
                 }
 
                 const data = await response.json();
-                const completedExerciseIds = data.completedExercises.map((completedExercises: exercisesProps) => completedExercises.exerciseId)
-                dispatch({ type: "SET_COMPLETED_EXERCISES", exerciseIds: completedExerciseIds })
-
+                const completedQuizIds = data.completedQuizes.map((completedQuizes: quizProps) => completedQuizes)
+                dispatch({ type: "SET_COMPLETED_QUIZES", quizIds: completedQuizIds })
             } catch (err) {
                 console.log(err)
             }
@@ -35,26 +34,36 @@ export const useUserProgressServices = () => {
 
     }
     const clearUserProgressState = () => {
-        dispatch({ type: "SET_COMPLETED_EXERCISES", exerciseIds: [] });
+        dispatch({ type: "SET_COMPLETED_QUIZES", quizIds: [] });
     }
 
-    const postCompletedExercise = async (exerciseId: number) => {
+    const postCompletedQuiz = async (quizId: number) => {
+        let starGained = false as boolean;
+
         try {
-            const response = await fetch(`${DATABASEURL}/completeExercise`, {
+            const response = await fetch(`${DATABASEURL}/completeQuiz`, {
                 method: "POST",
                 headers: {
                     "Content-type": "application/json",
                     "Authorization": "Bearer " + authState.token
                 },
                 body: JSON.stringify({
-                    exerciseId: exerciseId
+                    quizId: quizId
                 })
             })
+            if (response.ok) {
+                if (!state.completedQuizes.includes(quizId)){
+                    dispatch({ type: "SET_COMPLETED_QUIZES", quizIds: [...state.completedQuizes, quizId] })
+                    starGained = true
+                }
+            }
         }
         catch (err) {
             console.log(err)
         }
+
+        return starGained
     }
 
-    return { getCompletedExercises, clearUserProgressState, postCompletedExercise }
+    return { getCompletedQuizes, clearUserProgressState, postCompletedQuiz }
 }
