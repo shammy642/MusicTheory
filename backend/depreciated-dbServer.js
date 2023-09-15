@@ -224,4 +224,3 @@ router.get("/allExercises", async (req, res) => {
       });
    })
 })
-

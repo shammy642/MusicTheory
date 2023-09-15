@@ -111,7 +111,7 @@ router.get("/quizQuestions", async (req, res) => {
                 through: { attributes: [] }
             }
         }).then((data) => {
-            res.status(200).send({ quizQuestions: data });
+            res.status(200).send({ quizQuestions: data.Exercises });
         });
     } catch (error) {
         console.error("Error fetching exercises for quiz:", error);
@@ -123,6 +123,27 @@ router.post("/createUser", async (req, res) => {
     const userName = req.body.userName;
     const emailAddress = req.body.emailAddress;
     const password = req.body.password;
+
+    if (!userName || !emailAddress || !password) {
+        return res.status(400).send({ message: 'All fields are required' });
+    }
+
+    if (userName.length > 50) {
+        return res.status(400).send({ message: 'Username is too long' });
+    }
+
+    if (emailAddress.length > 100) {
+        return res.status(400).send({ message: 'Email address is too long' });
+    }
+
+    if (password.length < 8 || password.length > 50) {
+        return res.status(400).send({ message: 'Password should be between 8 and 50 characters' });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailAddress)) {
+        return res.status(400).send({ message: 'Invalid email format' });
+    }
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -152,36 +173,51 @@ router.post("/createUser", async (req, res) => {
     }
 });
 
+
 router.post("/login", async (req, res) => {
     const userName = req.body.name;
     const password = req.body.password;
+
+    if (!userName || !password) {
+        return res.status(400).send({ message: 'Username and password are required' });
+    }
+
+    if (userName.length > 50) {
+        return res.status(400).send({ message: 'Username is too long' });
+    }
+
+    if (password.length < 8 || password.length > 50) {
+        return res.status(400).send({ message: 'Password should be between 8 and 50 characters' });
+    }
 
     try {
         const user = await users.findOne({ where: { userName: userName } });
 
         if (!user) {
             console.log("User does not exist");
-            return res.status(404).json({ message: 'User does not exist' });
+            return res.status(401).json({ message: 'Invalid username or password' });
         }
 
         const hashedPassword = user.password;
-        const userId = user.id; 
+        const userId = user.id;
+        const emailAddress = user.emailAddress;
 
         if (await bcrypt.compare(password, hashedPassword)) {
             console.log(`${userName}--------> Login successful`);
             console.log("---------> Generating accessToken");
-            const token = generateAccessToken({ user: userName, userId: userId });
-            res.json({ message: "User is logged in!", username: userName, accessToken: token });
+            const token = generateAccessToken({ userName: userName, userId: userId, emailAddress: emailAddress });
+            res.json({ message: "User is logged in!", accessToken: token });
         } else {
             console.log("Login unsuccessful");
-            res.status(401).send('Password incorrect!');
+            res.status(401).json({ message: 'Invalid username or password' });
         }
 
     } catch (error) {
         console.log(error);
-        res.status(500).send({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 router.post("/completeQuiz", authenticateAccessToken, async (req, res) => {
     const quizId = req.body.quizId;
@@ -239,14 +275,7 @@ router.get("/quizes", async (req, res) => {
             ]
         })
         .then((data) => {
-            const quizListBySection = data.reduce((acc, quiz) => {
-                if (!acc[quiz.section]) {
-                    acc[quiz.section] = [];
-                }
-                acc[quiz.section].push(quiz.id);
-                return acc;
-            }, {});
-            res.status(200).send({ Quizes: quizListBySection });
+            res.status(200).send({ quizes: data });
         });
     } catch (error) {
         console.error("Error fetching quizes:", error);
