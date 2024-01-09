@@ -11,15 +11,20 @@ require("dotenv").config()
 const DB_USER = process.env.DB_USER
 const DB_PASSWORD = process.env.DB_PASSWORD
 const DB_DATABASE = process.env.DB_DATABASE
+const PORT = process.env.PORT;
+const allowedOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [];
 
 //Connect to database
 const sequelize = new Sequelize(DB_DATABASE, DB_USER, DB_PASSWORD, {
-    host: 'localhost',
-    dialect: 'mysql'
+    host: 'sqlserver',
+    dialect: 'postgres',
+    schema: DB_DATABASE
 });
+
+
 app.use(express.json())
 app.use(cors({
-    origin: ['http://localhost:3001', 'http://localhost:3001/',]
+    origin: allowedOrigins
 }));
 app.use("/api", router)
 
@@ -31,7 +36,6 @@ sequelize.sync()
         console.error('Unable to connect to the database:', error);
     });
 
-const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
