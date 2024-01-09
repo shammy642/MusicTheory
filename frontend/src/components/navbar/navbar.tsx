@@ -37,7 +37,7 @@ export const Navbar = () => {
             <Container>
                 <Toolbar>
                     <Box width="100%" display="flex" justifyContent="space-between" alignItems={"center"}>
-                        <Typography variant="h6" component="div" sx={{ cursor: "pointer" }} onClick={() => navigate('/contents-page')}>
+                        <Typography variant="h6" component="div" sx={{ cursor: "pointer" }} onClick={() => navigate('/')}>
                             MUSIC THEORY for Young Children
                         </Typography>
                         {authState.isAuthenticated ?
