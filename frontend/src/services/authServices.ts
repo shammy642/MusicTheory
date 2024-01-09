@@ -1,5 +1,4 @@
 import { useAuth } from "@/stateManagement/auth/useAuth"
-import { DATABASEURL } from "./config"
 import jwt_decode from "jwt-decode";
 
 type loginServiceProps = {
@@ -25,7 +24,7 @@ export const useAuthServices = () => {
     const login = async ({ userName, password }: loginServiceProps) => {
 
         try {
-            const response = await fetch(`${DATABASEURL}/login`, {
+            const response = await fetch(`${process.env.REACT_APP_DATABASEURL}/login`, {
                 method: "POST",
                 body: JSON.stringify({
                     name: userName,
@@ -65,7 +64,7 @@ export const useAuthServices = () => {
 
     const register = async ({ userName, password, emailAddress }: registerServiceProps) => {
         try {
-            const response = await fetch(`${DATABASEURL}/createUser`, {
+            const response = await fetch(`${process.env.REACT_APP_DATABASEURL}/createUser`, {
                 method: "POST",
                 body: JSON.stringify({
                     userName: userName,

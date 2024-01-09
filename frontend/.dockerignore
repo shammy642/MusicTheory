@@ -3,3 +3,4 @@ npm-debug.log
 build
 README.md
 .gitignore
+.env

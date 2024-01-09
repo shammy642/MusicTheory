@@ -1,5 +1,4 @@
 import { useUserProgress } from "@/stateManagement/userProgress/useUserProgress";
-import { DATABASEURL } from "./config";
 import { useAuth } from "@/stateManagement/auth/useAuth";
 import { quizProps } from "@/stateManagement/quizes/quizesTypes";
 
@@ -10,7 +9,7 @@ export const useUserProgressServices = () => {
     const getCompletedQuizes = async () => {
         if (authState.isAuthenticated) {
             try {
-                const response = await fetch(`${DATABASEURL}/completeQuizes`, {
+                const response = await fetch(`${process.env.REACT_APP_DATABASEURL}/completeQuizes`, {
                     method: "GET",
                     headers: {
                         "Content-type": "application/json",
@@ -41,7 +40,7 @@ export const useUserProgressServices = () => {
         let starGained = false as boolean;
 
         try {
-            const response = await fetch(`${DATABASEURL}/completeQuiz`, {
+            const response = await fetch(`${process.env.REACT_APP_DATABASEURL}/completeQuiz`, {
                 method: "POST",
                 headers: {
                     "Content-type": "application/json",

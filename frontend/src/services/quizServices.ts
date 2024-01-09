@@ -1,4 +1,3 @@
-import { DATABASEURL } from "./config"
 import { useQuizes } from "@/stateManagement/quizes/useQuizes";
 
 
@@ -8,7 +7,7 @@ export const useQuizServices = () => {
     const getAllQuizes= async () => {
         
         try {
-            const response = await fetch(`${DATABASEURL}/quizes`, {
+            const response = await fetch(`${process.env.REACT_APP_DATABASEURL}/quizes`, {
                 method: "GET",
                 headers: {
                     "Content-type": "application/json",

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom";
 import { NoteSelect } from "@/components/exercises/noteSelect";
 import { NoteIdentify } from "@/components/exercises/noteIdentify";
-import { DATABASEURL } from "@/services/config";
 import { useUserProgressServices } from "@/services/userProgressServices";
 
 type ExerciseProps = {
@@ -19,7 +18,7 @@ export const QuizPage = () => {
 
     const getExercises = async () => {
         try {
-            const response = await fetch(`${DATABASEURL}/quizQuestions?quizId=${quizId}`, {
+            const response = await fetch(`${process.env.REACT_APP_DATABASEURL}/quizQuestions?quizId=${quizId}`, {
                 method: "GET",
                 headers: {
                     "Content-type": "application/json",

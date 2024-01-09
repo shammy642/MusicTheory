@@ -30,7 +30,6 @@ export const ContentsPage = () => {
     return (
         <React.Fragment>
             <Container>
-                
                 <Box sx={{ flexGrow: 1 }}>
                     <Container>
                         <Box display="flex" justifyContent="center" margin={2}>
