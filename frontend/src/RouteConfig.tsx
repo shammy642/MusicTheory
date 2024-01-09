@@ -9,7 +9,7 @@ export const RouteConfig = () => {
     return (
         <Routes>
             <Route path="/" element={<MainLayoutWithContext />}>
-                <Route path="/contents-page" element={<ContentsPage />} />
+                <Route index element={<ContentsPage />} />
                 <Route path="/quiz/:quizId" element={<QuizPage />} />
                 <Route path="/congratulations/:hasGainedStar" element={<Congratulations />} />
             </Route>
