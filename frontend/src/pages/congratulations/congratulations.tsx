@@ -11,7 +11,7 @@ export const Congratulations = () => {
 
     useEffect(()=> {
         setTimeout(() => {
-            navigate('/contents-page')
+            navigate('/')
         }, 3000);
     }, [navigate])
 
