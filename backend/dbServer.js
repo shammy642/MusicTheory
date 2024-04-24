@@ -1,4 +1,4 @@
-const { Sequelize } = require('sequelize');
+const { Sequelize, DataTypes } = require('sequelize');
 const express = require("express")
 const cors = require('cors')
 const app = express()
@@ -12,7 +12,7 @@ const DB_USER = process.env.DB_USER
 const DB_PASSWORD = process.env.DB_PASSWORD
 const DB_DATABASE = process.env.DB_DATABASE
 const PORT = process.env.PORT;
-const allowedOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [];
+const allowedOrigin = process.env.CORS_ORIGIN;
 
 //Connect to database
 const sequelize = new Sequelize(DB_DATABASE, DB_USER, DB_PASSWORD, {
@@ -24,7 +24,7 @@ const sequelize = new Sequelize(DB_DATABASE, DB_USER, DB_PASSWORD, {
 
 app.use(express.json())
 app.use(cors({
-    origin: allowedOrigins
+    origin: allowedOrigin
 }));
 app.use("/api", router)
 
