@@ -18,6 +18,7 @@ Backend developed in NodeJS with Express and uses Sequilize for database managem
 <img width="926" alt="Screenshot 2024-04-24 at 12 37 33" src="https://github.com/shammy642/MusicTheory/assets/9137248/6e069b8d-f6b4-486a-b364-a331463d12b9">
 <img width="1099" alt="Screenshot 2024-04-24 at 12 37 53" src="https://github.com/shammy642/MusicTheory/assets/9137248/4c4f35ab-cbff-4ba9-a020-c5665e2fe05e">
 <img width="1105" alt="Screenshot 2024-04-24 at 12 38 20" src="https://github.com/shammy642/MusicTheory/assets/9137248/756abc01-256f-4f85-89a7-bf214beda0b2">
+<img width="1239" alt="Screenshot 2024-04-24 at 12 53 54" src="https://github.com/shammy642/MusicTheory/assets/9137248/96240556-4f17-4ee8-98ff-e99718a390cc">
 
 ## Installation
 1. Make sure you have the latest version of Docker Desktop installed.
