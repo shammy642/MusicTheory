@@ -2,7 +2,7 @@
 Visual music theory exercises, for beginners.
 
 Frontend developed with React, Material UI and written in Typescript. 
-Backend developed in NodeJS with Express and uses Sequilize for database management.
+Backend developed in NodeJS with Express and uses Sequelize for database management.
 
 ## Features
 
